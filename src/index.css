@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #b0c6ff;
+    --surface: #050505;
+  }
+  
+  html, body {
+    background-color: #050505;
+    color: #e5e2e1;
+    overflow-x: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  /* Material symbols configuration */
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+    display: inline-block;
+  }
+  
+  /* Custom scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #050505;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #353534;
+    border-radius: 8px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #8c90a1;
+  }
+}
+
+/* Futuristic glassmorphic panels */
+.glass-panel {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.glass-card {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(176, 198, 255, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Electric Flow animations and gradients */
+.electric-flow {
+  background: linear-gradient(135deg, #b0c6ff 0%, #568dff 100%);
+  box-shadow: 0 0 20px rgba(176, 198, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.electric-flow:hover {
+  box-shadow: 0 0 35px rgba(176, 198, 255, 0.5);
+  filter: brightness(1.05);
+}
+
+.glow-text {
+  text-shadow: 0 0 12px rgba(176, 198, 255, 0.4);
+}
+
+.glow-accent {
+  box-shadow: 0 0 15px rgba(0, 219, 233, 0.2);
+}
+
+/* Grid backgrounds for dashboards */
+.node-link-canvas {
+  background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.network-bg {
+  background-image: radial-gradient(circle at 2px 2px, rgba(176, 198, 255, 0.05) 1px, transparent 0);
+  background-size: 40px 40px;
+}
+
+.timeline-line {
+  background: linear-gradient(to bottom, transparent, #b0c6ff 15%, #b0c6ff 85%, transparent);
+  width: 1px;
+  box-shadow: 0 0 15px rgba(176, 198, 255, 0.3);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
