@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIntent } from '../App';
 
@@ -8,6 +8,10 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  useEffect(() => {
+    document.title = "Portal Uplink | ResumeFlow";
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -25,7 +29,8 @@ export default function Auth() {
       <div className="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#00dbe9]/5 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="glass-panel w-full max-w-md p-8 rounded-3xl border border-white/10 shadow-2xl relative z-10 space-y-6">
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center gap-2">
+          <img src="/src/assets/logo.png" className="w-16 h-16 object-contain mb-2" alt="ResumeFlow Logo" />
           <span 
             onClick={() => navigate('/')} 
             className="font-display-lg text-2xl font-black text-[#b0c6ff] tracking-tighter drop-shadow-[0_0_8px_rgba(176,198,255,0.4)] cursor-pointer"

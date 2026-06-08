@@ -4,6 +4,10 @@ import { useIntent } from '../App';
 export default function Analytics() {
   const { journeys, notifications } = useIntent();
 
+  useEffect(() => {
+    document.title = "Analytics | ResumeFlow";
+  }, []);
+
   // Focus telemetry mock logs
   const [logs, setLogs] = useState([
     { time: '14:02:11', msg: 'Candidate intent mapping stabilized.' },

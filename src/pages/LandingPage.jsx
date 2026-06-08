@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [emailInput, setEmailInput] = useState('');
+
+  useEffect(() => {
+    document.title = "ResumeFlow | Intent Recovery System";
+  }, []);
 
   const handleLaunch = () => {
     navigate('/dashboard');
@@ -19,7 +23,10 @@ export default function LandingPage() {
       <header className="fixed top-0 w-full z-50 bg-[#050505]/70 backdrop-blur-2xl border-b border-white/10 shadow-2xl">
         <div className="flex justify-between items-center h-16 px-6 max-w-7xl mx-auto w-full">
           <div className="flex items-center gap-8">
-            <span className="font-headline-lg text-headline-lg font-bold text-[#b0c6ff] drop-shadow-[0_0_8px_rgba(176,198,255,0.4)]">ResumeFlow</span>
+            <span className="font-headline-lg text-headline-lg font-bold text-[#b0c6ff] drop-shadow-[0_0_8px_rgba(176,198,255,0.4)] flex items-center gap-2">
+              <img src="/src/assets/logo.png" className="w-6 h-6 object-contain" alt="" />
+              ResumeFlow
+            </span>
             <nav className="hidden md:flex items-center gap-6">
               <a className="font-label-mono text-xs text-[#b0c6ff] border-b-2 border-[#b0c6ff] hover:text-[#b0c6ff] transition-colors duration-200" href="#">Home</a>
               <a className="font-label-mono text-xs text-[#c2c6d8] hover:text-[#b0c6ff] transition-colors duration-200" href="#features">Features</a>
@@ -323,7 +330,10 @@ export default function LandingPage() {
       <footer className="bg-[#0e0e0e] border-t border-white/5 py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div>
-            <span className="font-headline-lg text-base font-bold text-[#b0c6ff]">ResumeFlow</span>
+            <span className="font-headline-lg text-base font-bold text-[#b0c6ff] flex items-center gap-2">
+              <img src="/src/assets/logo.png" className="w-5 h-5 object-contain" alt="" />
+              ResumeFlow
+            </span>
             <p className="text-[#c2c6d8] text-xs mt-1">Intent recovery for high-momentum teams.</p>
           </div>
           <span className="font-label-mono text-[10px] text-[#c2c6d8]/40">© 2026 RESUMEFLOW. ALL RIGHTS RESERVED.</span>

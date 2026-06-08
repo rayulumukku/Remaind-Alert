@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useIntent } from '../App';
 
 export default function Timeline() {
   const { sessions, journeys, resumeJourney } = useIntent();
   const [selectedSession, setSelectedSession] = useState(null);
+
+  useEffect(() => {
+    document.title = "Timeline | ResumeFlow";
+  }, []);
 
   const formatTime = (isoString) => {
     return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

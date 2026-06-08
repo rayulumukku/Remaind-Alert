@@ -50,7 +50,8 @@ export default function App() {
         const mapped = data.map(item => ({
           ...item,
           category: item.categories ? item.categories.name : 'Research',
-          progressPct: item.progress_pct || 0
+          progressPct: item.progress_pct || 0,
+          progress_pct: item.progress_pct || 0
         }));
         setJourneys(mapped);
       }
@@ -96,11 +97,15 @@ export default function App() {
         localStorage.setItem('extension_id', import.meta.env.VITE_EXTENSION_ID);
       }
     } else {
-      // Clear data to enforce no mock data
-      setJourneys([]);
-      setSessions([]);
-      setNotifications([]);
-      setActiveSessions([]);
+      // Load from localStorage or mock data
+      const localJourneys = getLocalData('journeys', INITIAL_JOURNEYS);
+      const localSessions = getLocalData('sessions', INITIAL_SESSIONS);
+      const localNotifications = getLocalData('notifications', INITIAL_NOTIFICATIONS);
+      const localActiveSessions = getLocalData('activeSessions', INITIAL_ACTIVE_SESSIONS);
+      setJourneys(localJourneys);
+      setSessions(localSessions);
+      setNotifications(localNotifications);
+      setActiveSessions(localActiveSessions);
     }
     setLoading(false);
 
@@ -110,14 +115,35 @@ export default function App() {
       window.chrome.runtime.sendMessage(extId, { action: 'getSavedData' }, (response) => {
         const err = window.chrome.runtime.lastError;
         if (!err && response) {
+          // Sync Supabase settings from extension if present and local is empty
+          if (response.supabaseUrl && response.supabaseKey && !localStorage.getItem('supabase_url')) {
+            localStorage.setItem('supabase_url', response.supabaseUrl);
+            localStorage.setItem('supabase_key', response.supabaseKey);
+            setSupabaseConnected(true);
+            fetchSupabaseData(response.supabaseUrl, response.supabaseKey);
+          }
           if (response.savedJourneys && response.savedJourneys.length > 0) {
-            setJourneys(response.savedJourneys);
+            const mapped = response.savedJourneys.map(j => ({
+              ...j,
+              progressPct: j.progressPct || j.progress_pct || 0,
+              progress_pct: j.progressPct || j.progress_pct || 0
+            }));
+            setJourneys(mapped);
+            if (!sbUrl || !sbKey) {
+              saveLocalData('journeys', mapped);
+            }
           }
           if (response.sessionLogs && response.sessionLogs.length > 0) {
             setSessions(response.sessionLogs);
+            if (!sbUrl || !sbKey) {
+              saveLocalData('sessions', response.sessionLogs);
+            }
           }
           if (response.activeSessions && response.activeSessions.length > 0) {
             setActiveSessions(response.activeSessions);
+            if (!sbUrl || !sbKey) {
+              saveLocalData('activeSessions', response.activeSessions);
+            }
           }
         }
       });
@@ -145,22 +171,39 @@ export default function App() {
       const data = e.detail;
       if (data) {
         if (data.savedJourneys) {
-          const mapped = data.savedJourneys.map(item => ({
-            ...item,
-            category: item.category || 'Research',
-            progressPct: item.progressPct || item.progress_pct || 0
-          }));
+          const mapped = data.savedJourneys.map(item => {
+            const p = item.progressPct || item.progress_pct || 0;
+            return {
+              ...item,
+              category: item.category || 'Research',
+              progressPct: p,
+              progress_pct: p
+            };
+          });
           setJourneys(mapped);
+          if (!supabaseConnected) {
+            saveLocalData('journeys', mapped);
+          }
         }
-        if (data.sessionLogs) setSessions(data.sessionLogs);
-        if (data.activeSessions) setActiveSessions(data.activeSessions);
+        if (data.sessionLogs) {
+          setSessions(data.sessionLogs);
+          if (!supabaseConnected) {
+            saveLocalData('sessions', data.sessionLogs);
+          }
+        }
+        if (data.activeSessions) {
+          setActiveSessions(data.activeSessions);
+          if (!supabaseConnected) {
+            saveLocalData('activeSessions', data.activeSessions);
+          }
+        }
       }
     };
     window.addEventListener('RESUMEFLOW_DASHBOARD_UPDATE', handleLiveUpdate);
     return () => {
       window.removeEventListener('RESUMEFLOW_DASHBOARD_UPDATE', handleLiveUpdate);
     };
-  }, []);
+  }, [supabaseConnected]);
 
   // Operations
   const resumeJourney = async (id) => {
@@ -178,9 +221,13 @@ export default function App() {
       });
       fetchSupabaseData(url, key);
     } else {
-      setJourneys(prev => prev.map(j => 
-        j.id === id ? { ...j, status: 'resumed', lastActiveAt: new Date().toISOString() } : j
-      ));
+      setJourneys(prev => {
+        const updated = prev.map(j => 
+          j.id === id ? { ...j, status: 'resumed', lastActiveAt: new Date().toISOString() } : j
+        );
+        saveLocalData('journeys', updated);
+        return updated;
+      });
     }
     addNotification(`Resumed flow: "${journeys.find(j => j.id === id)?.title || 'Selected Journey'}"`);
   };
@@ -200,9 +247,13 @@ export default function App() {
       });
       fetchSupabaseData(url, key);
     } else {
-      setJourneys(prev => prev.map(j => 
-        j.id === id ? { ...j, status: 'interrupted', lastActiveAt: new Date().toISOString() } : j
-      ));
+      setJourneys(prev => {
+        const updated = prev.map(j => 
+          j.id === id ? { ...j, status: 'interrupted', lastActiveAt: new Date().toISOString() } : j
+        );
+        saveLocalData('journeys', updated);
+        return updated;
+      });
     }
     addNotification(`Snoozed notifications for: "${journeys.find(j => j.id === id)?.title || 'Selected Journey'}"`);
   };
@@ -220,8 +271,16 @@ export default function App() {
       });
       fetchSupabaseData(url, key);
     } else {
-      setJourneys(prev => prev.filter(j => j.id !== id));
-      setSessions(prev => prev.filter(s => s.journey_id !== id));
+      setJourneys(prev => {
+        const updated = prev.filter(j => j.id !== id);
+        saveLocalData('journeys', updated);
+        return updated;
+      });
+      setSessions(prev => {
+        const updated = prev.filter(s => s.journey_id !== id);
+        saveLocalData('sessions', updated);
+        return updated;
+      });
     }
   };
 
@@ -240,9 +299,13 @@ export default function App() {
       });
       fetchSupabaseData(url, key);
     } else {
-      setJourneys(prev => prev.map(j => 
-        j.id === id ? { ...j, status: 'completed', progressPct: 100 } : j
-      ));
+      setJourneys(prev => {
+        const updated = prev.map(j => 
+          j.id === id ? { ...j, status: 'completed', progressPct: 100, progress_pct: 100 } : j
+        );
+        saveLocalData('journeys', updated);
+        return updated;
+      });
     }
     addNotification(`Completed journey: "${journeys.find(j => j.id === id)?.title || 'Selected Journey'}"!`);
   };
@@ -315,7 +378,11 @@ export default function App() {
         last_active_at: new Date().toISOString(),
         tags
       };
-      setJourneys(prev => [newJ, ...prev]);
+      setJourneys(prev => {
+        const updated = [newJ, ...prev];
+        saveLocalData('journeys', updated);
+        return updated;
+      });
       
       const newS = {
         id: 's-' + Math.random().toString(36).substring(2, 9),
@@ -326,7 +393,11 @@ export default function App() {
         metadata: { scroll_position: 0, interaction_count: 0 },
         created_at: new Date().toISOString()
       };
-      setSessions(prev => [newS, ...prev]);
+      setSessions(prev => {
+        const updated = [newS, ...prev];
+        saveLocalData('sessions', updated);
+        return updated;
+      });
       addNotification(`Started journey: "${title}"`);
       return newJ;
     }
@@ -340,11 +411,23 @@ export default function App() {
       sent_at: new Date().toISOString(),
       read_at: null
     };
-    setNotifications(prev => [newN, ...prev]);
+    setNotifications(prev => {
+      const updated = [newN, ...prev];
+      if (!supabaseConnected) {
+        saveLocalData('notifications', updated);
+      }
+      return updated;
+    });
   };
 
   const markAllNotificationsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read_at: new Date().toISOString() })));
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, read_at: new Date().toISOString() }));
+      if (!supabaseConnected) {
+        saveLocalData('notifications', updated);
+      }
+      return updated;
+    });
   };
 
   const configureSupabase = (url, key) => {

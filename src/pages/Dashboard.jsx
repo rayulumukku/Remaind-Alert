@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useIntent } from '../App';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { journeys, sessions, activeSessions, resumeJourney, snoozeJourney, deleteJourney, completeJourney } = useIntent();
+
+  useEffect(() => {
+    document.title = "Dashboard | ResumeFlow";
+  }, []);
 
   const activeJourneys = journeys.filter(j => j.status === 'interrupted' || j.status === 'active');
   

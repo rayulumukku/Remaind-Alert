@@ -39,9 +39,10 @@ export default function Navbar({ children }) {
       <header className="fixed top-0 left-0 w-full z-50 bg-[#050505]/70 backdrop-blur-2xl border-b border-white/10 shadow-2xl flex justify-between items-center h-16 px-6">
         <div className="flex items-center gap-4">
           <span 
-            className="font-headline-lg text-[20px] font-bold text-[#b0c6ff] cursor-pointer drop-shadow-[0_0_8px_rgba(176,198,255,0.4)]"
+            className="font-headline-lg text-[20px] font-bold text-[#b0c6ff] cursor-pointer drop-shadow-[0_0_8px_rgba(176,198,255,0.4)] flex items-center gap-2"
             onClick={() => navigate('/')}
           >
+            <img src="/src/assets/logo.png" className="w-6 h-6 object-contain" alt="" />
             ResumeFlow
           </span>
         </div>
@@ -124,9 +125,7 @@ export default function Navbar({ children }) {
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-64 z-40 bg-[#1c1b1b]/80 backdrop-blur-xl border-r border-white/5 flex-col p-6 pt-20 shadow-2xl">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-[#b0c6ff]/20 rounded flex items-center justify-center">
-              <span className="material-symbols-outlined text-[#b0c6ff]">rebase_edit</span>
-            </div>
+            <img src="/src/assets/logo.png" className="w-8 h-8 object-contain rounded" alt="ResumeFlow Logo" />
             <div>
               <p className="font-headline-lg text-[14px] font-bold text-[#b0c6ff]">ResumeFlow</p>
               <p className="text-[9px] text-[#c2c6d8] uppercase tracking-widest">Intent Recovery Shell</p>

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useIntent } from '../App';
 
 export default function Journeys() {
   const { journeys, resumeJourney, snoozeJourney, deleteJourney, completeJourney } = useIntent();
   const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    document.title = "Saved Journeys | ResumeFlow";
+  }, []);
 
   const filteredJourneys = journeys.filter(j => {
     if (filter === 'all') return true;

@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useIntent } from '../App';
 
 export default function Settings() {
   const { supabaseConnected, configureSupabase, addNotification } = useIntent();
+
+  useEffect(() => {
+    document.title = "Settings | ResumeFlow";
+  }, []);
 
   const [sbUrl, setSbUrl] = useState(localStorage.getItem('supabase_url') || import.meta.env.VITE_SUPABASE_URL || '');
   const [sbKey, setSbKey] = useState(localStorage.getItem('supabase_key') || import.meta.env.VITE_SUPABASE_KEY || '');
