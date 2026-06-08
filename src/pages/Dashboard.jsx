@@ -4,13 +4,39 @@ import { useIntent } from '../App';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { journeys, sessions, resumeJourney } = useIntent();
+  const { journeys, sessions, activeSessions, resumeJourney, snoozeJourney, deleteJourney, completeJourney } = useIntent();
 
   const activeJourneys = journeys.filter(j => j.status === 'interrupted' || j.status === 'active');
-  const recentSessions = sessions.slice(0, 3);
-
+  
   // SVG network nodes simulation
   const [activeNode, setActiveNode] = useState(null);
+
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'Learning': return 'bg-[#b0c6ff]/20 text-[#b0c6ff] border-[#b0c6ff]/30';
+      case 'Coding': return 'bg-[#ecb2ff]/20 text-[#ecb2ff] border-[#ecb2ff]/30';
+      case 'Documentation': return 'bg-[#7df4ff]/20 text-[#7df4ff] border-[#7df4ff]/30';
+      case 'Shopping': return 'bg-[#00dbe9]/20 text-[#00dbe9] border-[#00dbe9]/30';
+      default: return 'bg-[#00a0aa]/20 text-[#00a0aa] border-[#00a0aa]/30';
+    }
+  };
+
+  const getProgressColor = (category) => {
+    switch (category) {
+      case 'Learning': return 'bg-gradient-to-r from-[#b0c6ff] to-[#568dff]';
+      case 'Coding': return 'bg-gradient-to-r from-[#ecb2ff] to-[#cf5cff]';
+      case 'Documentation': return 'bg-gradient-to-r from-[#7df4ff] to-[#00dbe9]';
+      default: return 'bg-gradient-to-r from-[#00dbe9] to-[#00a0aa]';
+    }
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0s';
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
 
   return (
     <div className="space-y-8">
@@ -126,93 +152,146 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Neural stream / Activity feed (6 cols) */}
+        {/* Live Active Sessions (6 cols) */}
         <div className="md:col-span-6 space-y-4">
-          <h3 className="font-headline-lg text-lg font-bold text-white">Neural stream</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="font-headline-lg text-lg font-bold text-white flex items-center gap-2">
+              <span className="w-2.5 h-2.5 bg-[#00dbe9] rounded-full animate-ping"></span>
+              Active Sessions
+            </h3>
+            <span className="font-label-mono text-[10px] text-[#00dbe9] tracking-widest">LIVE TELEMETRY</span>
+          </div>
           
-          {recentSessions.length === 0 ? (
-            <p className="text-sm text-[#c2c6d8] py-8 text-center glass-panel rounded-2xl">No recent sessions mapped.</p>
+          {activeSessions.length === 0 ? (
+            <div className="glass-panel p-8 rounded-2xl border border-white/5 text-center space-y-3">
+              <span className="material-symbols-outlined text-4xl text-[#c2c6d8]/30">explore</span>
+              <p className="text-sm text-[#c2c6d8]">No active browser sessions tracked.</p>
+              <p className="text-xs text-[#c2c6d8]/60 max-w-xs mx-auto">Verify Developer Mode is enabled and the extension is loaded on active research tabs.</p>
+            </div>
           ) : (
-            recentSessions.map(session => {
-              const categoryColors = {
-                Learning: 'text-[#b0c6ff]',
-                Coding: 'text-[#ecb2ff]',
-                Documentation: 'text-[#7df4ff]',
-                Shopping: 'text-[#00dbe9]',
-                Research: 'text-[#00a0aa]'
-              };
-              return (
-                <div key={session.id} className="glass-panel p-4 rounded-xl flex gap-4 hover:border-[#b0c6ff]/30 transition-all">
-                  <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                    <span className={`material-symbols-outlined ${categoryColors[session.category] || 'text-[#b0c6ff]'}`}>
-                      merge
+            <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+              {activeSessions.map(session => (
+                <div key={session.id || session.tabId} className="glass-card rounded-xl p-4 border border-white/5 flex gap-4 hover:border-[#00dbe9]/30 transition-all relative overflow-hidden group">
+                  {session.isTracking && (
+                    <div className="absolute top-0 right-0 h-[2px] w-24 bg-[#00dbe9] animate-pulse"></div>
+                  )}
+                  <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/10">
+                    <span className="material-symbols-outlined text-[#00dbe9]">
+                      {session.category === 'Coding' ? 'code' : session.category === 'Learning' ? 'school' : session.category === 'Documentation' ? 'description' : 'explore'}
                     </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-body-md font-semibold text-sm truncate text-white">{session.tab_title}</h4>
-                      <span className="font-label-mono text-[9px] text-[#c2c6d8] shrink-0">
-                        {new Date(session.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-label-mono tracking-widest border ${getCategoryColor(session.category)}`}>
+                          {session.category.toUpperCase()}
+                        </span>
+                        <span className="text-[10px] text-[#00dbe9] font-label-mono flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-[#00dbe9] rounded-full animate-pulse"></span>
+                          {formatDuration(session.elapsedSeconds || Math.round((Date.now() - session.startTime) / 1000))}
+                        </span>
+                      </div>
+                      <h4 className="font-headline-md text-sm font-semibold text-white truncate mt-1.5">{session.tab_title}</h4>
                     </div>
-                    <p className="font-body-sm text-xs text-[#c2c6d8] truncate mt-1">{session.tab_url}</p>
+                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-white/5">
+                      <span className="text-[10px] text-[#c2c6d8]/80 truncate flex-1 font-mono">{session.tab_url}</span>
+                      <div className="flex items-center gap-1 font-label-mono text-[9px] text-[#c2c6d8] shrink-0">
+                        <span>Scroll:</span>
+                        <span className="text-[#00dbe9] font-bold">{session.scrollPosition || 0}%</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              );
-            })
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Quick Actions & API Utilization (6 cols) */}
-        <div className="md:col-span-6 space-y-6">
-          <h3 className="font-headline-lg text-lg font-bold text-white">Quick Telemetry Controls</h3>
+        {/* Saved Cards / Journeys (6 cols) */}
+        <div className="md:col-span-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="font-headline-lg text-lg font-bold text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-[#b0c6ff] text-xl">bookmark</span>
+              Saved Journey Cards
+            </h3>
+            <button 
+              onClick={() => navigate('/journeys')}
+              className="text-xs text-[#b0c6ff] hover:underline font-label-mono uppercase tracking-wider"
+            >
+              View All
+            </button>
+          </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div 
-              onClick={() => navigate('/timeline')}
-              className="glass-panel p-4 rounded-xl group cursor-pointer hover:border-[#b0c6ff]/50 transition-all"
-            >
-              <span className="material-symbols-outlined text-[#b0c6ff] mb-2 group-hover:scale-110 transition-transform">timeline</span>
-              <p className="font-body-md font-medium text-white text-sm">Resume stream</p>
-              <p className="font-body-sm text-xs text-[#c2c6d8]">Access tab maps</p>
+          {journeys.length === 0 ? (
+            <div className="glass-panel p-8 rounded-2xl border border-white/5 text-center space-y-3">
+              <span className="material-symbols-outlined text-4xl text-[#c2c6d8]/30">workspaces</span>
+              <p className="text-sm text-[#c2c6d8]">No saved journey cards.</p>
+              <p className="text-xs text-[#c2c6d8]/60 max-w-xs mx-auto">Journeys will register here immediately once captured by the extension or started manually.</p>
             </div>
-            
-            <div 
-              onClick={() => navigate('/analytics')}
-              className="glass-panel p-4 rounded-xl group cursor-pointer hover:border-[#00dbe9]/50 transition-all"
-            >
-              <span className="material-symbols-outlined text-[#00dbe9] mb-2 group-hover:scale-110 transition-transform">analytics</span>
-              <p className="font-body-md font-medium text-white text-sm">Flow Analytics</p>
-              <p className="font-body-sm text-xs text-[#c2c6d8]">Examine heatmaps</p>
+          ) : (
+            <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1">
+              {journeys.slice(0, 4).map(journey => (
+                <div key={journey.id} className="glass-card rounded-xl p-4 flex gap-4 border border-white/5 relative overflow-hidden group hover:border-[#b0c6ff]/30 transition-all">
+                  {/* Thumbnail / Category block */}
+                  <div className="w-16 h-16 rounded-lg overflow-hidden relative bg-white/5 shrink-0 border border-white/10">
+                    <img src={journey.thumbnail_url} className="w-full h-full object-cover opacity-50" alt="" />
+                    <div className="absolute inset-0 bg-[#050505]/40"></div>
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-label-mono tracking-widest border ${getCategoryColor(journey.category)}`}>
+                          {journey.category.toUpperCase()}
+                        </span>
+                        <span className="text-[9px] text-[#c2c6d8]/60 truncate font-mono">
+                          {journey.start_url ? new URL(journey.start_url).hostname.replace('www.', '') : ''}
+                        </span>
+                      </div>
+                      <h4 className="font-headline-md text-sm font-semibold text-white truncate mt-1.5">{journey.title}</h4>
+                    </div>
+                    
+                    <div className="mt-2.5 flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div className={`h-full ${getProgressColor(journey.category)}`} style={{ width: `${journey.progressPct}%` }}></div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-label-mono text-[#b0c6ff] shrink-0 font-bold">{journey.progressPct}%</span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions Column */}
+                  <div className="flex flex-col justify-center gap-2 shrink-0 border-l border-white/5 pl-3">
+                    {journey.status !== 'completed' ? (
+                      <button 
+                        onClick={() => resumeJourney(journey.id)} 
+                        className="p-1.5 bg-[#b0c6ff] text-[#002d6f] rounded-lg hover:brightness-110 transition-all cursor-pointer flex items-center justify-center" 
+                        title="Resume Journey"
+                      >
+                        <span className="material-symbols-outlined text-sm font-bold">play_arrow</span>
+                      </button>
+                    ) : (
+                      <div className="p-1.5 text-green-400 flex items-center justify-center" title="Completed">
+                        <span className="material-symbols-outlined text-sm">check_circle</span>
+                      </div>
+                    )}
+                    <button 
+                      onClick={() => deleteJourney(journey.id)} 
+                      className="p-1.5 bg-white/5 text-[#c2c6d8] hover:text-[#ffb4ab] rounded-lg hover:bg-white/10 transition-all cursor-pointer flex items-center justify-center" 
+                      title="Delete Journey"
+                    >
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-
-          <div className="bg-[#201f1f] rounded-xl p-4 border border-white/5 relative overflow-hidden">
-            <h4 className="font-label-mono text-[9px] text-[#c2c6d8] uppercase mb-4 tracking-widest">Active System Signals</h4>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-label-mono">
-                  <span>EXTENSION_UPLINK</span>
-                  <span className="text-[#b0c6ff]">85%</span>
-                </div>
-                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#b0c6ff]" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs font-label-mono">
-                  <span>INACTIVITY_ENGINE</span>
-                  <span className="text-[#00dbe9]">100%</span>
-                </div>
-                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#00dbe9]" style={{ width: '100%' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
       </div>
     </div>
   );
 }
+

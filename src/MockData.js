@@ -121,6 +121,35 @@ export const INITIAL_NOTIFICATIONS = [
   }
 ];
 
+export const INITIAL_ACTIVE_SESSIONS = [
+  {
+    id: 'as-1',
+    tabId: 101,
+    tab_url: 'https://github.com/facebook/react/issues/24458',
+    tab_title: 'React Concurrent Mode rendering issue #24458',
+    startTime: Date.now() - 480 * 1000, // 8 mins ago
+    lastActivityTime: Date.now() - 10 * 1000,
+    category: 'Coding',
+    interactions: 24,
+    scrollPosition: 45,
+    isTracking: true,
+    created_at: new Date(Date.now() - 480 * 1000).toISOString()
+  },
+  {
+    id: 'as-2',
+    tabId: 102,
+    tab_url: 'https://youtube.com/watch?v=ConcurrentReactExplained',
+    tab_title: 'Concurrent React Explained - Visual Guide',
+    startTime: Date.now() - 1200 * 1000, // 20 mins ago
+    lastActivityTime: Date.now() - 95 * 1000,
+    category: 'Learning',
+    interactions: 12,
+    scrollPosition: 68,
+    isTracking: false,
+    created_at: new Date(Date.now() - 1200 * 1000).toISOString()
+  }
+];
+
 // LocalStorage helpers to simulate database operations in Mock Mode
 export const getLocalData = (key, fallback) => {
   const data = localStorage.getItem(`resumeflow_${key}`);
