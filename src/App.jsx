@@ -23,6 +23,15 @@ export default function App() {
   const [user, setUser] = useState({ email: 'architect@resumeflow.io' }); // Simulate logged-in user
   const [supabaseConnected, setSupabaseConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const getSupabaseCredentials = () => {
+    const url = localStorage.getItem('supabase_url') || import.meta.env.VITE_SUPABASE_URL || '';
+    const key = localStorage.getItem('supabase_key') || import.meta.env.VITE_SUPABASE_KEY || '';
+    return { url, key };
+  };
+
+  const getExtensionId = () => {
+    return localStorage.getItem('extension_id') || import.meta.env.VITE_EXTENSION_ID || 'lghdfjdhckejdksjldkfjsldfkjsldfk';
+  };
 
   // Fetch real-time data from Supabase
   const fetchSupabaseData = async (url, key) => {
@@ -70,12 +79,22 @@ export default function App() {
 
   // Load initial data
   useEffect(() => {
-    const sbUrl = localStorage.getItem('supabase_url');
-    const sbKey = localStorage.getItem('supabase_key');
+    const { url: sbUrl, key: sbKey } = getSupabaseCredentials();
     
     if (sbUrl && sbKey) {
       setSupabaseConnected(true);
       fetchSupabaseData(sbUrl, sbKey);
+      
+      // Auto-save env variables to localStorage for settings forms & extension synchronization
+      if (!localStorage.getItem('supabase_url') && import.meta.env.VITE_SUPABASE_URL) {
+        localStorage.setItem('supabase_url', import.meta.env.VITE_SUPABASE_URL);
+      }
+      if (!localStorage.getItem('supabase_key') && import.meta.env.VITE_SUPABASE_KEY) {
+        localStorage.setItem('supabase_key', import.meta.env.VITE_SUPABASE_KEY);
+      }
+      if (!localStorage.getItem('extension_id') && import.meta.env.VITE_EXTENSION_ID) {
+        localStorage.setItem('extension_id', import.meta.env.VITE_EXTENSION_ID);
+      }
     } else {
       // Clear data to enforce no mock data
       setJourneys([]);
@@ -86,7 +105,7 @@ export default function App() {
     setLoading(false);
 
     // Try to sync active extension state
-    const extId = localStorage.getItem('extension_id') || 'lghdfjdhckejdksjldkfjsldfkjsldfk';
+    const extId = getExtensionId();
     if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
       window.chrome.runtime.sendMessage(extId, { action: 'getSavedData' }, (response) => {
         const err = window.chrome.runtime.lastError;
@@ -108,7 +127,7 @@ export default function App() {
   // Update Chrome extension when state updates (only sync journeys to extension storage)
   useEffect(() => {
     if (journeys.length > 0) {
-      const extId = localStorage.getItem('extension_id') || 'lghdfjdhckejdksjldkfjsldfkjsldfk';
+      const extId = getExtensionId();
       if (window.chrome && window.chrome.runtime && window.chrome.runtime.sendMessage) {
         window.chrome.runtime.sendMessage(extId, {
           action: 'updateJourneys',
@@ -146,8 +165,7 @@ export default function App() {
   // Operations
   const resumeJourney = async (id) => {
     if (supabaseConnected) {
-      const url = localStorage.getItem('supabase_url');
-      const key = localStorage.getItem('supabase_key');
+      const { url, key } = getSupabaseCredentials();
       const headers = {
         'apikey': key,
         'Authorization': `Bearer ${key}`,
@@ -169,8 +187,7 @@ export default function App() {
 
   const snoozeJourney = async (id) => {
     if (supabaseConnected) {
-      const url = localStorage.getItem('supabase_url');
-      const key = localStorage.getItem('supabase_key');
+      const { url, key } = getSupabaseCredentials();
       const headers = {
         'apikey': key,
         'Authorization': `Bearer ${key}`,
@@ -192,8 +209,7 @@ export default function App() {
 
   const deleteJourney = async (id) => {
     if (supabaseConnected) {
-      const url = localStorage.getItem('supabase_url');
-      const key = localStorage.getItem('supabase_key');
+      const { url, key } = getSupabaseCredentials();
       const headers = {
         'apikey': key,
         'Authorization': `Bearer ${key}`
@@ -211,8 +227,7 @@ export default function App() {
 
   const completeJourney = async (id) => {
     if (supabaseConnected) {
-      const url = localStorage.getItem('supabase_url');
-      const key = localStorage.getItem('supabase_key');
+      const { url, key } = getSupabaseCredentials();
       const headers = {
         'apikey': key,
         'Authorization': `Bearer ${key}`,
@@ -234,8 +249,7 @@ export default function App() {
 
   const addNewJourney = async (title, url, category, tags = []) => {
     if (supabaseConnected) {
-      const sbUrl = localStorage.getItem('supabase_url');
-      const sbKey = localStorage.getItem('supabase_key');
+      const { url: sbUrl, key: sbKey } = getSupabaseCredentials();
       const headers = {
         'apikey': sbKey,
         'Authorization': `Bearer ${sbKey}`,

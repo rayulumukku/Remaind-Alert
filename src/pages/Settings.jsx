@@ -4,9 +4,9 @@ import { useIntent } from '../App';
 export default function Settings() {
   const { supabaseConnected, configureSupabase, addNotification } = useIntent();
 
-  const [sbUrl, setSbUrl] = useState(localStorage.getItem('supabase_url') || '');
-  const [sbKey, setSbKey] = useState(localStorage.getItem('supabase_key') || '');
-  const [extId, setExtId] = useState(localStorage.getItem('extension_id') || 'lghdfjdhckejdksjldkfjsldfkjsldfk');
+  const [sbUrl, setSbUrl] = useState(localStorage.getItem('supabase_url') || import.meta.env.VITE_SUPABASE_URL || '');
+  const [sbKey, setSbKey] = useState(localStorage.getItem('supabase_key') || import.meta.env.VITE_SUPABASE_KEY || '');
+  const [extId, setExtId] = useState(localStorage.getItem('extension_id') || import.meta.env.VITE_EXTENSION_ID || 'lghdfjdhckejdksjldkfjsldfkjsldfk');
   
   const [notifBrowser, setNotifBrowser] = useState(true);
   const [notifMobile, setNotifMobile] = useState(true);
